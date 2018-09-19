@@ -1,4 +1,5 @@
 'use strict';
 const { User } = require('./users');
+const { Ticket } = require('./ticket')
 
-module.exports = { User };
+module.exports = { User, Ticket };

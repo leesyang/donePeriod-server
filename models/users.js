@@ -5,13 +5,20 @@ const bcrypt = require('bcryptjs');
 const Schema = mongoose.Schema;
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
+const userNotes = new Schema({
+    created: { type: Date, default: Date.now() },
+    comment: String,
+})
+
 const userSchema = new Schema({
-    username: {type: String, required: true, unique: true},
-    firstName: {type: String, required: true},
-    lastName: {type: String, required: true},
-    password: {type: String, require: true},
-    email: {type: String, required: true, unique: true},
-    profilePicture: {type: String, default: 'default-user-image.png'},
+    username: { type: String, required: true, unique: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    password: { type: String, require: true },
+    email: { type: String, required: true, unique: true },
+    profilePicture: { type: String, default: 'default-user-image.png' },
+    watching: [ { type: ObjectId, ref: 'Ticket' } ],
+    notes: [ { type: userNotes, default: userNotes } ]
 });
 
 userSchema.methods.serialize = function() {
@@ -19,11 +26,19 @@ userSchema.methods.serialize = function() {
         username: this.username,
         firstName: this.firstName,
         lastName: this.lastName,
-        email: this.email,
         profilePicture: this.profilePicture,
-        id: this._id,
+        watching: this.watching,
+        notes: this.notes,
+        id: this._id
     };
 };
+
+userSchema.methods.filterWatching = function() {
+    return {
+        ticket_Id: this.ticket_Id,
+        id: this._id
+    }
+}
 
 userSchema.statics.hashPassword = function(password) {
     return bcrypt.hash(password, 10);

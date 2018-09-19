@@ -12,12 +12,18 @@ const { newUserInputCheck } = require('../middlewares/fieldReqCheck');
 const { uploader } = require('../middlewares/multer');
 
 // ----- routes -----
-router.get('/', usersCtrl.getListOfUsers )
+router.get('/', jwtAuth, usersCtrl.getListOfUsers )
 
 // -- create new user --
 router.post('/', newUserInputCheck, usersCtrl.addNewUser );
 
-// -- update user info --
-router.put('/', jwtAuth, uploader.ProfilePic, usersCtrl.updateUser);
+// -- watch a ticket --
+router.post('/:userId/watches', jwtAuth, usersCtrl.watchTicket );
+
+// -- add note ---
+router.post('/:userId/notes', jwtAuth, usersCtrl.addNote );
+
+// -- remove a note --
+router.delete('/:userId/notes', jwtAuth, usersCtrl.removeNote);
 
 module.exports = { router };

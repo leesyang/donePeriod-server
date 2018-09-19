@@ -30,6 +30,8 @@ const localStrategy = new LocalStrategy(
     let user;
     let mypass = password;
     User.findOne({ username: username })
+    .populate('watching', 'ticketId id dueDate')
+    .populate('notes')
       .then(_user => {
         user = _user;
         if (!user) {

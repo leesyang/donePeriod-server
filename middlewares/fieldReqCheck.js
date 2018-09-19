@@ -33,9 +33,9 @@ const newUserInputCheck = function(req, res, next) {
 };
 
 // ----- songs route -----
-const newSongFieldsCheck = function(req, res, next) {
+const newTicketFieldsCheck = function(req, res, next) {
   const fieldIs = {
-      required: ['artist', 'title']
+      required: ['type', 'priority', 'dueDate', 'description']
   };
   
     const isMissing = checkReq.missingFields(fieldIs.required, req.body);
@@ -84,24 +84,9 @@ const deleteComFieldCheck = function(req, res, next) {
   next();
 };
 
-const newSetFieldsCheck = function(req, res, next) {
-  const fieldIs = {
-    required: ['eventDate', 'eventType', 'mainLead']
-  };
-
-  const isMissing = checkReq.missingFields(fieldIs.required, req.body);
-  if (isMissing) {
-    return res.status(isMissing.code).json(isMissing);
-  }
-
-  next();
-};
-
-
 module.exports = { 
   newUserInputCheck, 
-  newSongFieldsCheck,
+  newTicketFieldsCheck,
   newComFieldCheck,
   updateComFieldCheck,
-  deleteComFieldCheck,
-  newSetFieldsCheck };
+  deleteComFieldCheck };

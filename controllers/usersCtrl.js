@@ -2,17 +2,29 @@
 const aws = require('aws-sdk');
 
 // ----- imports -----
-const { User } = require('../models');
+const { User, Ticket } = require('../models');
 
 // ----- exports -----
 const usersCtrl = {};
 
 // ---- user utility functions -----
-
-usersCtrl.getListOfUsers = function (req, res) {
+const getUsersPromise = () => {
   return User.find()
-  .then(users => res.status(200).json(users.map(user => user.serialize())))
-  .catch(err => console.log(err));
+  .populate('watching', '_id ticket_Id')
+  .then(users => users.map(user => user.serialize()))
+}
+
+const getUserPromise = (user) => {
+  return User.findOne(user.id)
+  .populate('watching', '_id ticket_Id')
+  .populate('notes')
+}
+
+// ----- controller functions -----
+usersCtrl.getListOfUsers = function (req, res) {
+  getUsersPromise()
+  .then(users => { console.log(users); res.status(200).json(users)})
+  .catch(console.log);
 };
 
 usersCtrl.addNewUser = function (req, res) {
@@ -150,6 +162,42 @@ usersCtrl.updateUser = function (req, res) {
       })
     })
     
+  })
+}
+
+usersCtrl.watchTicket = function(req, res) {
+  const { userId } = req.params;
+  const ticket_Id = req.body.data;
+
+  return User.findByIdAndUpdate(userId, { $push: { watching: ticket_Id }}, { new: true })
+  .then(user => getUserPromise(user.id))
+  .then(user => res.status(201).json(user.watching));
+}
+
+usersCtrl.addNote = function(req, res) {
+
+  const { userId } = req.params;
+  const { comment } = req.body;
+  let current = Date.now();
+
+  return User.findOneAndUpdate(userId, { $push: { notes: { created: current, comment }}}, { new: true })
+    .then(user => res.status(201).json(user.notes))
+}
+
+usersCtrl.removeNote = function (req, res) {
+  const { userId } = req.params;
+  const noteId = req.body.data;
+  return User.findById(userId)
+  .then(user => {
+
+    let subDoc = user.notes.id(noteId);
+
+    subDoc.remove();
+
+    return user.save() 
+  })
+  .then(user => {
+    res.status(204).end();
   })
 }
 
