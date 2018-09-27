@@ -46,6 +46,17 @@ const ticketSchema = new Schema({
     worklog: [ worklogActivitySchema ],
 });
 
+// ----- methods -----
+ticketSchema.methods.filterDescription = function() {
+    return { description: this.description }
+}
+ticketSchema.methods.filterTicketInfo = function() {
+    return { ticketInfo: this.ticketInfo }
+}
+ticketSchema.methods.filterVotes = function() {
+    return { votes: this.votes }
+}
+
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
 module.exports = { Ticket, TicketConstants };

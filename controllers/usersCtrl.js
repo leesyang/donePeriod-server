@@ -10,13 +10,13 @@ const usersCtrl = {};
 // ---- user utility functions -----
 const getUsersPromise = () => {
   return User.find()
-  .populate('watching', '_id ticket_Id')
+  .populate('watching', '_id ticketId dueDate')
   .then(users => users.map(user => user.serialize()))
 }
 
-const getUserPromise = (user) => {
-  return User.findOne(user.id)
-  .populate('watching', '_id ticket_Id')
+const getUserPromise = (userId) => {
+  return User.findOne({ _id: userId })
+  .populate('watching', '_id ticketId dueDate')
   .populate('notes')
 }
 
@@ -26,6 +26,14 @@ usersCtrl.getListOfUsers = function (req, res) {
   .then(users => { console.log(users); res.status(200).json(users)})
   .catch(console.log);
 };
+
+usersCtrl.getUser = function(req, res) {
+  const { userId } = req.params;
+
+  getUserPromise(userId)
+  .then(user => res.status(200).json(user.serialize()))
+  .catch(err => res.status(500).json(err))
+}
 
 usersCtrl.addNewUser = function (req, res) {
   let { username, password, firstName, lastName, email, profilePicture } = req.body;
@@ -171,7 +179,18 @@ usersCtrl.watchTicket = function(req, res) {
 
   return User.findByIdAndUpdate(userId, { $push: { watching: ticket_Id }}, { new: true })
   .then(user => getUserPromise(user.id))
-  .then(user => res.status(201).json(user.watching));
+  .then(user => res.status(201).json(user.watching))
+  .catch(console.log)
+}
+
+usersCtrl.unwatchTicket = function(req, res) {
+  const { userId } = req.params;
+  const ticket_Id = req.body.data;
+
+  return User.findByIdAndUpdate(userId, { $pull: { 'watching': ticket_Id }}, { 'new': true })
+  .then(user => getUserPromise(user.id))
+  .then(user => {res.status(201).json(user.watching)})
+  .catch(err => console.log(err))
 }
 
 usersCtrl.addNote = function(req, res) {
