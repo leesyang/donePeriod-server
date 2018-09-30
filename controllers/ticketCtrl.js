@@ -121,8 +121,7 @@ ticketCtrl.voteTicket = (req, res) => {
 }
 
 ticketCtrl.removeVote = (req, res) => {
-    console.log(req.body);
-    console.log(req.user);
+
 }
 
 module.exports = ticketCtrl;

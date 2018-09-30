@@ -85,91 +85,38 @@ usersCtrl.addNewUser = function (req, res) {
   });
 };
 
-usersCtrl.updateUser = function (req, res) {
-  let updateInfo = { 
-    experience: {}
-  };
+usersCtrl.updateUserPhoto = function(req, res) {
+  const { id: userId } = req.user;
+  const { key } = req.file;
+  const fileName = key.slice(12)
 
-  Object.keys(req.body).forEach(function(key, index) {
-    if (key in req.user && req.body[key] != req.user[key]) {
-      updateInfo[key] = req.body[key];
-    }
-    if (!( key in req.user)) {
-      updateInfo.experience[key] = req.body[key];
-    }
-  });
-
-  if (req.file) {
-    updateInfo.profilePicture = req.file.key.substring(20);
-  }
-
-  if (updateInfo.email) {
-    return User.find({ email: updateInfo.email })
-    .count()
-    .then(count => {
-      if (count > 0 ) {
-        return Promise.reject({
-          code: 422,
-          reason: 'ValidationError',
-          message: 'Email already taken',
-          location: 'email'
-        })
-      }
-    })
-    .catch(err => {
-      if (err) {
-        res.status(422).json(err);
-      }
-    })
-  }
-
-  return User.findById(req.user.id)
+  User.findByIdAndUpdate(userId, { $set: { profilePicture: fileName }}, { new: false })
   .then(user => {
-    let profilePictureLink = user.profilePicture;
-    
-    if (updateInfo.profilePicture) {
-      // ----- Amazon S3 -----
-      aws.config.update({
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-      });
-  
-      const s3 = new aws.S3()
-      const myBucket = process.env.S3_BUCKET_NAME;
-  
-      let params = {
-        Bucket: myBucket, 
-        Key: 'user-profile-images/'+profilePictureLink
-      };
-  
-      return s3.deleteObject(params).promise()
+    const { profilePicture } = user.serialize();
+
+    // ----- Amazon S3 -----
+    aws.config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    });
+
+    const s3 = new aws.S3()
+    const myBucket = process.env.S3_BUCKET_NAME;
+
+    let params = {
+      Bucket: myBucket, 
+      Key: 'user-images/'+profilePicture
+    };
+
+    if(profilePicture === 'default-profile-img.svg') {
+      res.status(201).json({ profilePicture: fileName })
+    }
+    else {
+      s3.deleteObject(params).promise()
       .then(function(data) {
-        if (data) {
-          return User.findByIdAndUpdate(req.user.id, updateInfo, { new: true })
-          .then(user => {
-            res.status(201).json(user.serialize());
-          })
-          .catch(err => {
-            res.status(500).json({
-              code: 500,
-              message: 'Database Error'
-            })
-          })
-        }
+        data? res.status(201).json({ profilePicture: fileName }) : null;
       })
     }
-
-    return User.findByIdAndUpdate(req.user.id, updateInfo, { new: true })
-    .then(user => {
-      res.status(201).json(user.serialize());
-    })
-    .catch(err => {
-      res.status(500).json({
-        code: 500,
-        message: 'Database Error'
-      })
-    })
-    
   })
 }
 

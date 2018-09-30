@@ -18,11 +18,16 @@ router.get('/', jwtAuth, usersCtrl.getListOfUsers )
 // -- get user --
 router.get('/:userId', jwtAuth, usersCtrl.getUser)
 
+// -- update user photo --
+router.post('/:userId', jwtAuth, uploader.ProfilePic, usersCtrl.updateUserPhoto)
+
 // -- create new user --
 router.post('/', newUserInputCheck, usersCtrl.addNewUser );
 
 // -- watch a ticket --
 router.post('/:userId/watches', jwtAuth, usersCtrl.watchTicket );
+
+// -- update user photo --
 
 // -- un-watch a ticket --
 router.delete('/:userId/watches', jwtAuth, usersCtrl.unwatchTicket);

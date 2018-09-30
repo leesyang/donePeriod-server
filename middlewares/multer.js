@@ -16,23 +16,37 @@ aws.config.update({
 
 const myBucket = process.env.S3_BUCKET_NAME;
 
-// ---- utility function -----
-let uniqueId = shortid.generate();
-
 // ----- amazon storage settings -----
-const attachmentStorageAws = multerS3({
+const userProfileStorage = multerS3({
   s3: s3,
   bucket: myBucket,
   acl: 'public-read',
   contentType: multerS3.AUTO_CONTENT_TYPE, 
   key: function (req, file, cb) {
-    let ext = file.originalname.slice(-4);
-    cb(null, 'ticket-attachments/' + file.fieldname + '-' + Date.now() + ext);
+    const ext = file.originalname.match(/\.\w*/g)[0];
+    const uniqueId = shortid.generate();
+    cb(null, 'user-images/' + file.fieldname + '-' + uniqueId + ext);
   }
 });
 
-const uploadPicAws = multer({ storage: attachmentStorageAws });
+const ticketAttachmentsStorage = multerS3({
+  s3: s3,
+  bucket: myBucket,
+  acl: 'public-read',
+  contentType: multerS3.AUTO_CONTENT_TYPE, 
+  key: function (req, file, cb) {
+    const { ticketId } = req.body;
+    const ext = file.originalname.match(/\.\w*/g)[0];
+    const uniqueId = shortid.generate();
+    cb(null, `user-images/ticket-attachments/${ticketId}/` + file.originalname + '-' + uniqueId + ext);
+  }
+});
 
-uploader.ProfilePic = uploadPicAws.single('userImg');
+
+const uploadPicAws = multer({ storage: userProfileStorage });
+const uploadTicketAttachment = multer({ storage: ticketAttachmentsStorage })
+
+uploader.ProfilePic = uploadPicAws.single('profilePicture');
+uploader.TicketAttachments = uploadTicketAttachment.single('attachment');
 
 module.exports = { uploader };
