@@ -8,7 +8,7 @@ const shortid = require('shortid');
 const uploader = {};
 
 // ----- configuring amazon web services ------
-var s3 = new aws.S3({ /* ... */ })
+const s3 = new aws.S3({ /* ... */ })
 aws.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -35,11 +35,13 @@ const ticketAttachmentsStorage = multerS3({
   acl: 'public-read',
   contentType: multerS3.AUTO_CONTENT_TYPE, 
   key: function (req, file, cb) {
-    const { ticketId } = req.body;
+
+    const { ticketId } = req.meta? req.meta: req.body;
+    
     const ext = file.originalname.match(/\.\w*/g)[0];
     const uniqueId = shortid.generate();
-    cb(null, `user-images/ticket-attachments/${ticketId}/` + file.originalname + '-' + uniqueId + ext);
-  }
+    cb(null, `ticket-attachments/${ticketId}/` + file.originalname + '-' + uniqueId + ext);
+  },
 });
 
 
@@ -47,6 +49,6 @@ const uploadPicAws = multer({ storage: userProfileStorage });
 const uploadTicketAttachment = multer({ storage: ticketAttachmentsStorage })
 
 uploader.ProfilePic = uploadPicAws.single('profilePicture');
-uploader.TicketAttachments = uploadTicketAttachment.single('attachment');
+uploader.TicketAttachments = uploadTicketAttachment.array('files', 5);
 
-module.exports = { uploader };
+module.exports = { uploader, s3, myBucket };

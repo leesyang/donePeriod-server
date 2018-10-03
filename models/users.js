@@ -16,7 +16,7 @@ const userSchema = new Schema({
     lastName: { type: String, required: true },
     password: { type: String, require: true },
     email: { type: String, required: true, unique: true },
-    profilePicture: { type: String, default: 'default-user-image.png' },
+    profilePicture: { type: String, default: 'user-images/default-user-image.svg' },
     watching: [ { type: ObjectId, ref: 'Ticket' } ],
     notes: [ { type: userNotes, default: userNotes } ]
 });
@@ -38,6 +38,10 @@ userSchema.methods.filterWatching = function() {
         ticket_Id: this.ticket_Id,
         id: this._id
     }
+}
+
+userSchema.methods.filterNotes = function() {
+    return { notes: this.notes }
 }
 
 userSchema.statics.hashPassword = function(password) {

@@ -3,6 +3,7 @@ const aws = require('aws-sdk');
 
 // ----- imports -----
 const { User, Ticket } = require('../models');
+const { capitalizeFirst } = require('../common/util');
 
 // ----- exports -----
 const usersCtrl = {};
@@ -38,7 +39,10 @@ usersCtrl.getUser = function(req, res) {
 usersCtrl.addNewUser = function (req, res) {
   let { username, password, firstName, lastName, email, profilePicture } = req.body;
   firstName = firstName.trim();
+  firstName = capitalizeFirst(firstName);
+
   lastName = lastName.trim();
+  lastName = capitalizeFirst(lastName);
 
   return User.find({ username }).count()
   .then(count => {
@@ -88,9 +92,10 @@ usersCtrl.addNewUser = function (req, res) {
 usersCtrl.updateUserPhoto = function(req, res) {
   const { id: userId } = req.user;
   const { key } = req.file;
-  const fileName = key.slice(12)
 
-  User.findByIdAndUpdate(userId, { $set: { profilePicture: fileName }}, { new: false })
+  console.log(req.file)
+
+  User.findByIdAndUpdate(userId, { $set: { profilePicture: key }}, { new: false })
   .then(user => {
     const { profilePicture } = user.serialize();
 
@@ -105,16 +110,16 @@ usersCtrl.updateUserPhoto = function(req, res) {
 
     let params = {
       Bucket: myBucket, 
-      Key: 'user-images/'+profilePicture
+      Key: profilePicture
     };
 
     if(profilePicture === 'default-profile-img.svg') {
-      res.status(201).json({ profilePicture: fileName })
+      res.status(201).json({ profilePicture: key })
     }
     else {
       s3.deleteObject(params).promise()
       .then(function(data) {
-        data? res.status(201).json({ profilePicture: fileName }) : null;
+        data? res.status(201).json({ profilePicture: key }) : null;
       })
     }
   })
@@ -147,24 +152,15 @@ usersCtrl.addNote = function(req, res) {
   let current = Date.now();
 
   return User.findOneAndUpdate(userId, { $push: { notes: { created: current, comment }}}, { new: true })
-    .then(user => res.status(201).json(user.notes))
+    .then(user => res.status(201).json(user.filterNotes()))
 }
 
 usersCtrl.removeNote = function (req, res) {
   const { userId } = req.params;
-  const noteId = req.body.data;
-  return User.findById(userId)
-  .then(user => {
+  const { noteId } = req.body;
 
-    let subDoc = user.notes.id(noteId);
-
-    subDoc.remove();
-
-    return user.save() 
-  })
-  .then(user => {
-    res.status(204).end();
-  })
+  User.findOneAndUpdate(userId, { $pull: { notes: { _id: noteId }}}, { new: true })
+  .then(user => res.status(204).json(user.filterNotes()))
 }
 
 module.exports = usersCtrl;

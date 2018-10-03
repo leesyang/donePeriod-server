@@ -1,4 +1,5 @@
 const shortid = require('shortid');
+const { s3, myBucket} = require('../middlewares/multer')
 
 // ----- imports -----
 const { Ticket } = require('../models');
@@ -10,29 +11,22 @@ const ticketCtrl = {};
 
 // ----- utility functions -----
 const filterUserInfo = '-password -username -email -__v';
+const filterUserInfoComments = '-password -username -email -__v -notes -watching';
 
  const getTicketsPromise = () => {
     return Ticket.find({})
     .populate('reporter', filterUserInfo)
     .populate('assignee', filterUserInfo )
+    .populate('comments.addedBy', filterUserInfoComments)
+    .populate('worklog.addedBy', filterUserInfoComments)
 };
 
 const getTicketPromise = ticketId => {
     return Ticket.findById({ _id: ticketId })
     .populate('reporter', filterUserInfo )
     .populate('assignee', filterUserInfo )
-}
-
-const returnDescription = (object) => {
-    return {
-        description: object.description
-    }
-}
-
-const returnTicketInfo = (object) => {
-    return {
-        ticketInfo: object.ticketInfo
-    }
+    .populate('comments.addedBy', filterUserInfoComments)
+    .populate('worklog.addedBy', filterUserInfoComments)
 }
 
 // ----- controller functions -----
@@ -41,13 +35,24 @@ ticketCtrl.getAll = (req, res) => {
     .then(tickets => { res.status(200).json(tickets)})
 }
 
+ticketCtrl.generateTicketId = (req, res, next) => {
+    let ticketId = shortid.generate();
+    req.meta = {};
+    req.meta.ticketId = ticketId;
+    next();
+}
+
 ticketCtrl.postNewTicket = (req, res) => {
     const user = req.user;
     const { type, priority, dueDate, description, assignee } = req.body;
 
-    let ticketId = shortid.generate();
+    let ticketId = req.meta.ticketId;
 
     const { WORK_IN_PROGRESS, UNRESOLVED } = TicketConstants;
+
+    let attachments = req.files? req.files.map(file => file.key) : [];
+
+    console.log(attachments)
 
     let newTicket = new Ticket({
         ticketInfo: { 
@@ -60,7 +65,8 @@ ticketCtrl.postNewTicket = (req, res) => {
         dueDate,
         description: { text: description },
         ticketId,
-        reporter: user.id
+        reporter: user.id,
+        attachments
     })
 
     newTicket.save()
@@ -85,32 +91,97 @@ ticketCtrl.updateInfo = (req, res) => {
             'ticketInfo.resolution': resolution 
             }},
         { new: true })
-    .then(ticket => {console.log(ticket); res.status(200).json(returnTicketInfo(ticket))})
-}
-
-ticketCtrl.updateAttachments = (req, res) => {
-    res.status(204).json({
-        message: 'udpated attachments'
-    })
+    .then(ticket => res.status(200).json(ticket.filterUserInfo()))
 }
 
 ticketCtrl.updateDescription = (req, res) => {
     const { description } = req.body;
     const { ticketId } = req.params;
     Ticket.findByIdAndUpdate(ticketId, { $set: { "description.text": description }}, { new: true })
-    .then(ticket => res.status(200).json(returnDescription(ticket)))
+    .populate('comments.addedBy', filterUserInfo)
+    .then(ticket => res.status(200).json(ticket.filterDescription()))
 }
 
-ticketCtrl.updateComments = (req, res) => {
-    res.status(204).json({
-        message: 'udpated comments'
-    })
+ticketCtrl.newComment = (req, res) => {
+    const { comment } = req.body;
+    const { ticketId } = req.params;
+    const newComment = {
+        addedBy: req.user.id,
+        dateAdded: Date.now(),
+        comment: comment
+    };
+
+    Ticket.findByIdAndUpdate(ticketId, { $push: { comments: newComment }}, { new: true })
+    .populate('comments.addedBy', filterUserInfoComments)
+    .then(ticket => res.status(201).json(ticket.filterComments()))
 }
 
-ticketCtrl.updateWorkLog = (req, res) => {
-    res.status(204).json({
-        message: 'udpated worklog'
+ticketCtrl.deleteComment = (req, res) => {
+    const { commentId } = req.body;
+    const { ticketId } = req.params;
+    console.log(commentId)
+
+    Ticket.findByIdAndUpdate(ticketId, { $pull: { comments: { _id: commentId } }}, {new: true })
+    .populate('comments.addedBy', filterUserInfoComments)
+    .then(ticket => {res.status(200).json(ticket.filterComments())} )
+}
+
+ticketCtrl.newWorkLog = (req, res) => {
+    const { comment } = req.body;
+    const { ticketId } = req.params;
+    const newFiles = req.files.map(file => file.key);
+
+    const newWorklog = {
+        addedBy: req.user.id,
+        dateAdded: Date.now(),
+        comment: comment,
+        files: newFiles
+    }
+
+    Ticket.findByIdAndUpdate(ticketId, { $push: { worklog: newWorklog }}, { new: true })
+    .populate('worklog.addedBy', filterUserInfoComments)
+    .then(ticket => { console.log(ticket.filterWorklog()); res.status(200).json(ticket.filterWorklog())})
+    .catch(error => {console.log(error); res.status(500).json({ code: 500, message: 'Database Error'})})
+};
+
+const getTicketKeys = (ticket, worklogId) => {
+    const files = ticket.toObject().worklog.filter(log => `${log._id}` === worklogId)[0].files;
+    const keys = files.map(file => ({ Key: file }));
+    return keys
+}
+
+ticketCtrl.deleteWorkLog = (req, res) => {
+    const { worklogId } = req.body;
+    const { ticketId } = req.params;
+
+    Ticket.findByIdAndUpdate(ticketId, { $pull: { worklog: { _id: worklogId } }},{ new: false })
+    .then(ticket => {
+        let keys = getTicketKeys(ticket, worklogId);
+
+        if(keys.length > 0) {
+            const params = {
+                Bucket: myBucket, 
+                Delete: {
+                    Objects: keys, 
+                    Quiet: false
+                }
+            };
+
+            return s3.deleteObjects(params, function(err, data) {
+                if (err) console.log(err, err.stack); // an error occurred
+                else {
+                    return getTicketPromise(ticketId)
+                    .then(ticket => res.status(202).json(ticket.filterWorklog()))
+                }     // successful response
+            });
+        }
+        else {
+            return getTicketPromise(ticketId)
+            .then(ticket => res.status(202).json(ticket.filterWorklog()))
+        }
+
     })
+    .catch(error => {console.log(error); res.status(500).json({ code: 500, message: 'Database Error'})})
 }
 
 ticketCtrl.voteTicket = (req, res) => {

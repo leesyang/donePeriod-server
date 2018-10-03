@@ -26,7 +26,8 @@ const ticketCommentSchema = new Schema({
 const worklogActivitySchema = new Schema({
     addedBy: { type: ObjectId, ref: 'User'},
     dateAdded: { type: Date, default: Date.now() },
-    comment: String
+    comment: String,
+    files: Array
 })
 
 const ticketSchema = new Schema({
@@ -55,6 +56,12 @@ ticketSchema.methods.filterTicketInfo = function() {
 }
 ticketSchema.methods.filterVotes = function() {
     return { votes: this.votes }
+}
+ticketSchema.methods.filterComments = function() {
+    return { comments: this.comments }
+}
+ticketSchema.methods.filterWorklog = function() {
+    return { worklog: this.worklog }
 }
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
