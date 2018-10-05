@@ -32,6 +32,7 @@ const localStrategy = new LocalStrategy(
     User.findOne({ username: username })
     .populate('watching', 'ticketId id dueDate')
     .populate('notes')
+    .populate('assigned', 'ticketId id dueDate description votes')
       .then(_user => {
         user = _user;
         if (!user) {

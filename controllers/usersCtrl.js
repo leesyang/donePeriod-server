@@ -12,6 +12,7 @@ const usersCtrl = {};
 const getUsersPromise = () => {
   return User.find()
   .populate('watching', '_id ticketId dueDate')
+  .populate('assigned', 'ticketId id dueDate description votes')
   .then(users => users.map(user => user.serialize()))
 }
 
@@ -19,6 +20,7 @@ const getUserPromise = (userId) => {
   return User.findOne({ _id: userId })
   .populate('watching', '_id ticketId dueDate')
   .populate('notes')
+  .populate('assigned', 'ticketId id dueDate description votes')
 }
 
 // ----- controller functions -----
@@ -151,16 +153,15 @@ usersCtrl.addNote = function(req, res) {
   const { comment } = req.body;
   let current = Date.now();
 
-  return User.findOneAndUpdate(userId, { $push: { notes: { created: current, comment }}}, { new: true })
+  return User.findByIdAndUpdate(userId, { $push: { notes: { created: current, comment }}}, { new: true })
     .then(user => res.status(201).json(user.filterNotes()))
 }
 
 usersCtrl.removeNote = function (req, res) {
   const { userId } = req.params;
   const { noteId } = req.body;
-
-  User.findOneAndUpdate(userId, { $pull: { notes: { _id: noteId }}}, { new: true })
-  .then(user => res.status(204).json(user.filterNotes()))
+  User.findByIdAndUpdate(userId, { $pull: { notes: { _id: noteId }}}, { new: true })
+  .then(user => {console.log(user); res.status(204).json(user.filterNotes())})
 }
 
 module.exports = usersCtrl;

@@ -2,7 +2,7 @@ const shortid = require('shortid');
 const { s3, myBucket} = require('../middlewares/multer')
 
 // ----- imports -----
-const { Ticket } = require('../models');
+const { Ticket, User } = require('../models');
 const temp_data = require('./tempData');
 const { TicketConstants } = require('../models/ticket');
 
@@ -52,7 +52,6 @@ ticketCtrl.postNewTicket = (req, res) => {
 
     let attachments = req.files? req.files.map(file => file.key) : [];
 
-    console.log(attachments)
 
     let newTicket = new Ticket({
         ticketInfo: { 
@@ -71,13 +70,14 @@ ticketCtrl.postNewTicket = (req, res) => {
 
     newTicket.save()
     .then(ticket => {
-        getTicketPromise(ticket._id)
-        .then(ticket => res.status(201).json(ticket))
+        User.findByIdAndUpdate(assignee, { $push: { assigned: ticket._id }}, { new: true })
+        .then(user => ticket)
+        .then(ticket => {
+            getTicketPromise(ticket._id)
+            .then(ticket => res.status(201).json(ticket))
+        })
     })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({ message: 'Internal Server Error' }) 
-    })
+    .catch(err => res.status(500).json({ message: 'Internal Server Error' }))
 }
 
 ticketCtrl.updateInfo = (req, res) => {

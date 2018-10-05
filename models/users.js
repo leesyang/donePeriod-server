@@ -16,9 +16,10 @@ const userSchema = new Schema({
     lastName: { type: String, required: true },
     password: { type: String, require: true },
     email: { type: String, required: true, unique: true },
-    profilePicture: { type: String, default: 'user-images/default-user-image.svg' },
+    profilePicture: { type: String, default: 'user-images/default-profile-img.svg' },
     watching: [ { type: ObjectId, ref: 'Ticket' } ],
-    notes: [ { type: userNotes, default: userNotes } ]
+    notes: [ { type: userNotes, default: userNotes } ],
+    assigned: [ { type: ObjectId, ref: 'Ticket' }]
 });
 
 userSchema.methods.serialize = function() {
@@ -29,7 +30,8 @@ userSchema.methods.serialize = function() {
         profilePicture: this.profilePicture,
         watching: this.watching,
         notes: this.notes,
-        id: this._id
+        id: this._id,
+        assigned: this.assigned
     };
 };
 
