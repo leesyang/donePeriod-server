@@ -51,6 +51,7 @@ const newAssignFieldCheck = function(req, res, next) {
   User.findById(req.fields.assignee)
   .then(user => {
     if(user) {
+      console.log('went through newassingfieldCheck')
       next();
     }
     else {

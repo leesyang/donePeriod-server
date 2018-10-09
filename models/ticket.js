@@ -32,7 +32,8 @@ const worklogActivitySchema = new Schema({
 
 const ticketSchema = new Schema({
     ticketId: { type: String },
-    description: Object,
+    description: { type: Object, default: { text: 'N/A' }},
+    title: { type: String, default: 'New Ticket'},
     ticketInfo: Object,
     dueDate: { type: Date, default: new Date().addDays(7)},
     assignee: { type: ObjectId, ref: 'User' },

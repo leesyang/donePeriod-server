@@ -45,15 +45,12 @@ ticketCtrl.generateTicketId = (req, res, next) => {
 ticketCtrl.postNewTicket = (req, res) => {
     const user = req.user;
     const { type, priority, dueDate, description, assignee } = req.body;
-    console.log('======= START ================== Description: req.body || FILE: ticketCtrl || LINE: 48 ============');
-    console.log(req.body);
-    console.log('=======  END  ================== Description: req.body || FILE: ticketCtrl || LINE: 48 ============');
 
-    let ticketId = req.meta.ticketId;
+    const ticketId = shortid.generate();
 
     const { WORK_IN_PROGRESS, UNRESOLVED } = TicketConstants;
 
-    let attachments = req.files? req.files.map(file => file.key) : [];
+    //let attachments = req.files? req.files.map(file => file.key) : [];
 
 
     let newTicket = new Ticket({
@@ -68,7 +65,7 @@ ticketCtrl.postNewTicket = (req, res) => {
         description: { text: description },
         ticketId,
         reporter: user.id,
-        attachments
+       // attachments
     })
 
     newTicket.save()
@@ -94,7 +91,7 @@ ticketCtrl.updateInfo = (req, res) => {
             'ticketInfo.resolution': resolution 
             }},
         { new: true })
-    .then(ticket => res.status(200).json(ticket.filterUserInfo()))
+    .then(ticket => res.status(200).json(ticket.filterTicketInfo()))
 }
 
 ticketCtrl.updateDescription = (req, res) => {

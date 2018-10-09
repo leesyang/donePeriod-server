@@ -1,6 +1,7 @@
 'use strict';
 const router = require('express').Router();
-const formidable = require('express-formidable');
+//const formidable = require('express-formidable');
+const formidable = require('formidable');
 
 // ----- authentication -----
 const { jwtAuth } = require('../middlewares/auth');
@@ -16,7 +17,7 @@ const { newAssignFieldCheck } = require('../middlewares/fieldReqCheck');
 router.get('/', jwtAuth, ticketCtrl.getAll);
 
 // -- post --
-router.post('/', jwtAuth, ticketCtrl.generateTicketId, uploader.TicketAttachments, ticketCtrl.postNewTicket);
+router.post('/', jwtAuth, ticketCtrl.postNewTicket);
 
 router.post('/:ticketId/vote', jwtAuth, ticketCtrl.voteTicket);
 
