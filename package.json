@@ -21,6 +21,7 @@
     "dotenv": "^6.0.0",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
+    "express-formidable": "^1.0.0",
     "express-session": "^1.15.6",
     "faker": "^4.1.0",
     "jsonwebtoken": "^8.2.2",

@@ -1,5 +1,6 @@
 'use strict';
 const router = require('express').Router();
+const formidable = require('express-formidable');
 
 // ----- authentication -----
 const { jwtAuth } = require('../middlewares/auth');
@@ -9,6 +10,7 @@ const ticketCtrl = require('../controllers/ticketCtrl');
 
 // ----- middleware -----
 const { uploader } = require('../middlewares/multer');
+const { newAssignFieldCheck } = require('../middlewares/fieldReqCheck');
 
 // ----- routes -----
 router.get('/', jwtAuth, ticketCtrl.getAll);

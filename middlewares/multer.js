@@ -35,7 +35,9 @@ const ticketAttachmentsStorage = multerS3({
   acl: 'public-read',
   contentType: multerS3.AUTO_CONTENT_TYPE, 
   key: function (req, file, cb) {
-
+    console.log('======= START ================== Description: file || FILE: multer || LINE: 38 ============');
+    console.log(file);
+    console.log('=======  END  ================== Description: file || FILE: multer || LINE: 38 ============');
     const { ticketId } = req.meta? req.meta: req.body;
     
     const ext = file.originalname.match(/\.\w*/g)[0];

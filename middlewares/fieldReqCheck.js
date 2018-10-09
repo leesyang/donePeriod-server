@@ -1,6 +1,7 @@
 'use strict';
 // ----- imports -----
 const { checkReq } = require('../common/common');
+const { User } = require('../models');
 
 // ----- users routes -----
 const newUserInputCheck = function(req, res, next) {
@@ -35,7 +36,7 @@ const newUserInputCheck = function(req, res, next) {
 // ----- songs route -----
 const newTicketFieldsCheck = function(req, res, next) {
   const fieldIs = {
-      required: ['type', 'priority', 'dueDate', 'description']
+      required: ['type', 'priority', 'dueDate', 'description', 'assignee']
   };
   
     const isMissing = checkReq.missingFields(fieldIs.required, req.body);
@@ -46,47 +47,24 @@ const newTicketFieldsCheck = function(req, res, next) {
     next();
 };
 
-const newComFieldCheck = function(req, res, next) {
-  const fieldIs = {
-    required: ['comment']
-  };
-
-  const isMissing = checkReq.missingFields(fieldIs.required, req.body);
-  if (isMissing) {
-    return res.status(isMissing.code).json(isMissing);
-  }
-  next();
+const newAssignFieldCheck = function(req, res, next) {
+  User.findById(req.fields.assignee)
+  .then(user => {
+    if(user) {
+      next();
+    }
+    else {
+      res.status(404).json({
+        code: 404,
+        reason: 'ValidationError',
+        message: 'Not a valid assignee',
+    }) 
+    }
+  })
 }
-
-const updateComFieldCheck = function(req, res, next) {
-  const fieldIs = {
-    required: ['commentId', 'comment']
-  };
-
-  const isMissing = checkReq.missingFields(fieldIs.required, req.body);
-  if (isMissing) {
-    return res.status(isMissing.code).json(isMissing);
-  }
-
-  next();
-};
-
-const deleteComFieldCheck = function(req, res, next) {
-  const fieldIs = {
-    required: ['commentId']
-  };
-
-  const isMissing = checkReq.missingFields(fieldIs.required, req.body);
-  if (isMissing) {
-    return res.status(isMissing.code).json(isMissing);
-  }
-
-  next();
-};
 
 module.exports = { 
   newUserInputCheck, 
   newTicketFieldsCheck,
-  newComFieldCheck,
-  updateComFieldCheck,
-  deleteComFieldCheck };
+  newAssignFieldCheck
+ };

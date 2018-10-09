@@ -45,6 +45,9 @@ ticketCtrl.generateTicketId = (req, res, next) => {
 ticketCtrl.postNewTicket = (req, res) => {
     const user = req.user;
     const { type, priority, dueDate, description, assignee } = req.body;
+    console.log('======= START ================== Description: req.body || FILE: ticketCtrl || LINE: 48 ============');
+    console.log(req.body);
+    console.log('=======  END  ================== Description: req.body || FILE: ticketCtrl || LINE: 48 ============');
 
     let ticketId = req.meta.ticketId;
 
