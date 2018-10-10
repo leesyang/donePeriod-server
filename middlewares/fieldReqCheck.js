@@ -35,6 +35,7 @@ const newUserInputCheck = function(req, res, next) {
 
 // ----- songs route -----
 const newTicketFieldsCheck = function(req, res, next) {
+  console.log('going through field check')
   const fieldIs = {
       required: ['type', 'priority', 'dueDate', 'description', 'assignee']
   };
@@ -48,7 +49,8 @@ const newTicketFieldsCheck = function(req, res, next) {
 };
 
 const newAssignFieldCheck = function(req, res, next) {
-  User.findById(req.fields.assignee)
+
+  User.findById(req.body.assignee)
   .then(user => {
     if(user) {
       console.log('went through newassingfieldCheck')

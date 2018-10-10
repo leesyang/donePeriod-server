@@ -3,6 +3,7 @@ const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const shortid = require('shortid');
+const upload = multer();
 
 // ----- exports -----
 const uploader = {};
@@ -35,11 +36,8 @@ const ticketAttachmentsStorage = multerS3({
   acl: 'public-read',
   contentType: multerS3.AUTO_CONTENT_TYPE, 
   key: function (req, file, cb) {
-    console.log('======= START ================== Description: file || FILE: multer || LINE: 38 ============');
-    console.log(file);
-    console.log('=======  END  ================== Description: file || FILE: multer || LINE: 38 ============');
-    const { ticketId } = req.meta? req.meta: req.body;
-    
+    const { ticketId } = req.body;
+    console.log(req.body)
     const ext = file.originalname.match(/\.\w*/g)[0];
     const uniqueId = shortid.generate();
     cb(null, `ticket-attachments/${ticketId}/` + file.originalname + '-' + uniqueId + ext);
@@ -52,5 +50,6 @@ const uploadTicketAttachment = multer({ storage: ticketAttachmentsStorage })
 
 uploader.ProfilePic = uploadPicAws.single('profilePicture');
 uploader.TicketAttachments = uploadTicketAttachment.array('files', 5);
+uploader.FieldsOnly = upload.none()
 
 module.exports = { uploader, s3, myBucket };

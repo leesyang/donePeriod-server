@@ -35,11 +35,15 @@ ticketCtrl.getAll = (req, res) => {
     .then(tickets => { res.status(200).json(tickets)})
 }
 
-ticketCtrl.generateTicketId = (req, res, next) => {
-    let ticketId = shortid.generate();
-    req.meta = {};
-    req.meta.ticketId = ticketId;
-    next();
+ticketCtrl.uploadAttachments = (req, res) => {
+    const { ticketId } = req.params;
+    let attachments = req.files? req.files.map(file => file.key) : [];
+
+    Ticket.findByIdAndUpdate(ticketId, { $set: { attachments }}, { new: true })
+    .then(ticket => {
+        getTicketPromise(ticket.id)
+        .then(ticket => res.status(201).json(ticket))
+    })
 }
 
 ticketCtrl.postNewTicket = (req, res) => {
@@ -49,9 +53,6 @@ ticketCtrl.postNewTicket = (req, res) => {
     const ticketId = shortid.generate();
 
     const { WORK_IN_PROGRESS, UNRESOLVED } = TicketConstants;
-
-    //let attachments = req.files? req.files.map(file => file.key) : [];
-
 
     let newTicket = new Ticket({
         ticketInfo: { 
@@ -65,17 +66,12 @@ ticketCtrl.postNewTicket = (req, res) => {
         description: { text: description },
         ticketId,
         reporter: user.id,
-       // attachments
     })
 
-    newTicket.save()
+    return newTicket.save()
     .then(ticket => {
         User.findByIdAndUpdate(assignee, { $push: { assigned: ticket._id }}, { new: true })
-        .then(user => ticket)
-        .then(ticket => {
-            getTicketPromise(ticket._id)
-            .then(ticket => res.status(201).json(ticket))
-        })
+        .then(user => res.status(201).json({ _id: ticket._id }))
     })
     .catch(err => res.status(500).json({ message: 'Internal Server Error' }))
 }
