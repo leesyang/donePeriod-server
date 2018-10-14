@@ -13,6 +13,9 @@ const ticketCtrl = {};
 const filterUserInfo = '-password -username -email -__v';
 const filterUserInfoComments = '-password -username -email -__v -notes -watching';
 
+// ----- generic error messages -----
+
+
  const getTicketsPromise = () => {
     return Ticket.find({})
     .populate('reporter', filterUserInfo)
@@ -48,7 +51,7 @@ ticketCtrl.uploadAttachments = (req, res) => {
 
 ticketCtrl.postNewTicket = (req, res) => {
     const user = req.user;
-    const { type, priority, dueDate, description, assignee } = req.body;
+    const { type, priority, dueDate, description, assignee, title } = req.body;
 
     const ticketId = shortid.generate();
 
@@ -63,6 +66,7 @@ ticketCtrl.postNewTicket = (req, res) => {
         },
         assignee,
         dueDate,
+        title,
         description: { text: description },
         ticketId,
         reporter: user.id,
@@ -71,9 +75,9 @@ ticketCtrl.postNewTicket = (req, res) => {
     return newTicket.save()
     .then(ticket => {
         User.findByIdAndUpdate(assignee, { $push: { assigned: ticket._id }}, { new: true })
-        .then(user => res.status(201).json({ _id: ticket._id }))
+        .then(user => res.status(201).json({ _id: ticket._id, ticketId: ticket.ticketId }))
     })
-    .catch(err => res.status(500).json({ message: 'Internal Server Error' }))
+    .catch(err => {console.log(err); res.status(500).json({ message: 'Internal Server Error' })})
 }
 
 ticketCtrl.updateInfo = (req, res) => {
@@ -88,6 +92,7 @@ ticketCtrl.updateInfo = (req, res) => {
             }},
         { new: true })
     .then(ticket => res.status(200).json(ticket.filterTicketInfo()))
+    .catch(err => { console.log(err); res.status(500).json()})
 }
 
 ticketCtrl.updateDescription = (req, res) => {
@@ -115,7 +120,6 @@ ticketCtrl.newComment = (req, res) => {
 ticketCtrl.deleteComment = (req, res) => {
     const { commentId } = req.body;
     const { ticketId } = req.params;
-    console.log(commentId)
 
     Ticket.findByIdAndUpdate(ticketId, { $pull: { comments: { _id: commentId } }}, {new: true })
     .populate('comments.addedBy', filterUserInfoComments)

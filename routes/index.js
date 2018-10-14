@@ -12,12 +12,10 @@ const { router: authRoute } = require('./authRoute'),
       { router: usersRoute } = require('./usersRoute'),
       { router: ticketsRoute } = require('./ticketsRoute');
 
-// ----- user and auth routes -----
+// ----- router -----
 router.use('/auth', authRoute);
 router.use('/users', usersRoute);
 router.use('/tickets', ticketsRoute);
-
-// ----- api routes -----
 
 
 module.exports = { router };

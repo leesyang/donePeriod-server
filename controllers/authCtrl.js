@@ -17,10 +17,5 @@ authCtrl.login = function (req, res) {
     res.status(200).json({ code: 201, message: 'Successful login', authToken: authToken });
 }
 
-authCtrl.logout = function (req, res) {
-    res.clearCookie('authToken');
-    res.redirect('/');
-}
-
 
 module.exports = authCtrl;

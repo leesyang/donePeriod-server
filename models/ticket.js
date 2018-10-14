@@ -38,7 +38,6 @@ const ticketSchema = new Schema({
     dueDate: { type: Date, default: new Date().addDays(7)},
     assignee: { type: ObjectId, ref: 'User' },
     reporter: { type: ObjectId, ref: 'User' },
-    team: [ { type: ObjectId, ref: 'User' } ],
     votes: [ { type: ObjectId, ref: 'User' } ],
     watchers: [ { type: ObjectId, ref: 'User'} ],
     created: { type: Date, default: Date.now() },

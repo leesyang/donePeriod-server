@@ -6,7 +6,7 @@ const faker = require('faker');
 const mongoose = require('mongoose');
 const aws = require('aws-sdk');
 
-const { app, runServer, closeServer } = require('../app');
+const { app, runServer, closeServer } = require('../server');
 const { User } = require('../models');
 const { TEST_DATABASE_URL } = require('../config/constants');
 
@@ -146,32 +146,6 @@ describe('SETS EP', function () {
 
     });
 
-    describe('GET /auth/logout', function() {
-      it('should clear the client cookie authToken', function() {
-        let loginAgent = chai.request.agent(app);
-        return loginAgent
-        .post('/auth/login')
-        .send(userLogin)
-        .then(res => {
-          expect(res).to.have.status(200);
-          expect(res).to.have.cookie('authToken');
-          return loginAgent
-          .get('/auth/logout')
-          .then(res => {
-            expect(res).to.have.status(200);
-            expect(res).to.not.have.cookie('authToken');
-            return loginAgent
-            .get('/home')
-            .then(res => {
-              expect(res).to.have.status(200)
-              expect(res.cookies).to.be.undefined;
-            })
-          })
-        })
-      });
-
-    })
-
     describe('POST /users', function() {
       it('should add a new user', function() {
         this.timeout(5000)
@@ -300,39 +274,6 @@ describe('SETS EP', function () {
           .then(awsRes => {
             expect(awsRes).to.be.a('object');
           })
-        })
-      });
-
-      it('should update user profile', function() {
-        let newAgent = chai.request.agent(app);
-        let { firstName, lastName, email } = newUsers[0];
-
-        let updatedInfo = {
-          firstName,
-          lastName,
-          email,
-          lastName: 'newLastName'
-        };
-
-        return newAgent
-        .post('/auth/login')
-        .send(userLogin)
-        .then(res => {
-          return newAgent
-          .put('/users')
-          .send(updatedInfo)
-          .then(res => {
-            expect(res).to.have.status(201);
-            expect(res.body).to.be.a('object');
-            expect(res.body.lastName).to.equal(updatedInfo.lastName);
-            return User.findById(res.body.id)
-          })
-          .then(user => {
-            expect(user.firstName).to.equal(updatedInfo.firstName);
-            expect(user.lastName).to.equal(updatedInfo.lastName);
-            expect(user.email).to.equal(updatedInfo.email);
-          })
-
         })
       });
 

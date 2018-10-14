@@ -11,6 +11,4 @@ const { authCtrl } = require('../controllers');
 
 router.post('/login', localAuth, authCtrl.login);
 
-router.get('/logout', authCtrl.logout);
-
 module.exports = { router };
