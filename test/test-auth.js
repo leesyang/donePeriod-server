@@ -70,7 +70,7 @@ describe('SETS EP', function () {
   });
 
   beforeEach(function () {
-    console.log('Seeding User Data and seeding songs');
+    console.log('Seeding User Data');
     return seedUserData()
     .then(users => {
       dbUsers = users;
@@ -96,14 +96,8 @@ describe('SETS EP', function () {
         .send(userLogin)
         .then(res => {
           expect(res).to.have.status(200);
-          expect(res).to.have.cookie('authToken');
           expect(res.body).to.be.a('object');
           expect(res.body).to.include.keys('authToken');
-          return agent
-          .get('/home')
-          .then(res => {
-            expect(res).to.have.status(200);
-          })
         })
       });
 
@@ -221,63 +215,6 @@ describe('SETS EP', function () {
       });
 
     });
-
-    describe('PUT /users', function() {
-      it('should upload profile picture of user', function() {
-        this.timeout(15000);
-        let newAgent = chai.request.agent(app);
-        let { firstName } = newUsers[0];
-
-        let userExp = {
-          instr1: 'Piano',
-          skill1: 'Still Learning',
-          instr2: 'Piano',
-          skill2: 'Still Learning',
-          instr3: 'Piano',
-          skill3: 'Still Learning'
-        };
-
-        return newAgent
-        .post('/auth/login')
-        .send(userLogin)
-        .then(res => {
-          expect(res).to.have.status(200);
-          return newAgent
-          .put('/users')
-          .attach('userImg', fs.readFileSync('media/test/aprofileimg.png'), 'aprofileimg.png')
-          .field('instr1', userExp.instr1)
-          .field('skill1', userExp.skill1)
-          .then(res => {
-            let resUser = res.body;
-            // ----- Amazon S3 -----
-            aws.config.update({
-              accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-              secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            });
-
-            const s3 = new aws.S3()
-            const myBucket = process.env.S3_BUCKET_NAME;
-
-            let params = {
-              Bucket: myBucket, 
-              Key: 'user-profile-images/'+resUser.profilePicture
-            };
-
-            return s3.deleteObject(params, function(err, data) {
-              if (err) {
-                expect.fail(null, null, 'file was not uploaded to aws properly')
-              };
-              expect(data).to.not.be.null;
-              expect(data).to.be.a('object');
-            }).promise()
-          })
-          .then(awsRes => {
-            expect(awsRes).to.be.a('object');
-          })
-        })
-      });
-
-    })
 
   });
 
