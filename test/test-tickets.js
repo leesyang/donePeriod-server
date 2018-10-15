@@ -218,7 +218,15 @@ describe('ticket endpoints', function() {
 
         describe('POST a new ticket', function() {
             it('should post a new ticket', function() {
-                const newTicket = generateTicket(dbUsers[0]._id);
+                const newTicket = { 
+                    type: 'Incident',
+                    priority: 'Urgent',
+                    assignee: newUsers[0]._id,
+                    dueDate: '2018-10-16',
+                    title: 'new title',
+                    description: 'a description'
+                }
+              
                 let res;
 
                 return agent
