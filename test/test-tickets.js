@@ -217,11 +217,11 @@ describe('ticket endpoints', function() {
         });
 
         describe('POST a new ticket', function() {
-            it('should post a new ticket', function() {
+            it.only('should post a new ticket', function() {
                 const newTicket = { 
                     type: 'Incident',
                     priority: 'Urgent',
-                    assignee: newUsers[0]._id,
+                    assignee: dbUsers[0]._id,
                     dueDate: '2018-10-16',
                     title: 'new title',
                     description: 'a description'
@@ -235,6 +235,7 @@ describe('ticket endpoints', function() {
                 .set('Authorization', `Bearer ${authToken}`)
                 .then(_res => {
                     res = _res;
+                    console.log(res.body)
                     expect(_res).to.have.status(201);
                     expect(_res.body).to.be.a('object');
                     expect(_res.body).to.include.keys('_id', 'ticketId');
