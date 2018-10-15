@@ -35,8 +35,8 @@ const newUserInputCheck = function(req, res, next) {
 
 // ----- songs route -----
 const newTicketFieldsCheck = function(req, res, next) {
-    let isMissing = checkReq.missingFields(['type', 'priority', 'status', 'resolution'], req.body.ticketInfo);
-    isMissing = checkReq.missingFields(['dueDate', 'description', 'assignee'], req.body);
+    console.log(req.body)
+    let isMissing = checkReq.missingFields(['type', 'priority', 'assignee', 'dueDate', 'title', 'description'], req.body);
     if (isMissing) {
       return res.status(isMissing.code).json(isMissing);
     }
