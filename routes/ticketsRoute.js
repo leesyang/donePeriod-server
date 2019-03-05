@@ -34,7 +34,9 @@ router.put('/:ticketId/info', jwtAuth, ticketCtrl.updateInfo);
 
 // -- delete --
 router.delete('/:ticketId/vote', jwtAuth, ticketCtrl.removeVote);
+
 router.delete('/:ticketId/comments', jwtAuth, ticketCtrl.deleteComment);
+
 router.delete('/:ticketId/worklog', jwtAuth, ticketCtrl.deleteWorkLog);
 
 module.exports = { router };
