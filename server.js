@@ -5,6 +5,12 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 //const favicon = require('serve-favicon');
 mongoose.Promise = global.Promise;
+
+// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
+// by default, you need to set it to false.
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true)
+
 const passport = require('passport');
 
 // ----- constants -----
@@ -50,7 +56,7 @@ let server;
 function runServer(databaseUrl, port = PORT) {
 
   return new Promise((resolve, reject) => {
-    mongoose.connect(databaseUrl, { useNewUrlParser: true }, err => {
+    mongoose.connect(databaseUrl, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
       if (err) {
         return reject(err);
       }
