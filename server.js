@@ -1,5 +1,5 @@
 'use strict';
-require('dotenv').config()
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
@@ -54,9 +54,13 @@ app.use('/', router);
 let server;
 
 function runServer(databaseUrl, port = PORT) {
-
   return new Promise((resolve, reject) => {
-    mongoose.connect(databaseUrl, { useNewUrlParser: true, useUnifiedTopology: true }, err => {
+    mongoose.connect(databaseUrl,
+      { 
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useUnifiedTopology: true 
+      }, err => {
       if (err) {
         return reject(err);
       }

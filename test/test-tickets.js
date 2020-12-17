@@ -1,16 +1,13 @@
 'use strict';
-const fs = require('fs');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const faker = require('faker');
 const mongoose = require('mongoose');
-const aws = require('aws-sdk');
 const shortid = require('shortid')
 
 const { app, runServer, closeServer } = require('../server');
 const { User, Ticket } = require('../models');
-const { JWT_SECRET, TEST_DATABASE_URL } = require('../config/constants');
-
+const { TEST_DATABASE_URL } = require('../config/constants');
 const expect = chai.expect;
 
 chai.use(chaiHttp);
@@ -64,29 +61,6 @@ const generateTickets = (dbUsers) => {
     }
 }
 
-const generateTicket = (user_Id) => {
-    return {
-        ticketId: shortid.generate(),
-        description: faker.random.words(),
-        title: faker.name.title(),
-        ticketInfo: {
-            type: randomizeWords(['Purchase', 'Incident', 'Repair']),
-            priority: randomizeWords(['High', 'Normal', 'Low']),
-            status: randomizeWords(['Work in progress', 'Delayed', 'Completed', 'Archived']),
-            resolution: randomizeWords(['Unresolved', 'Resolved'])
-        },
-        dueDate: new Date().addDays(7),
-        assignee: user_Id,
-        reporter: user_Id,
-        votes: [user_Id],
-        watchers: [user_Id],
-        attachments: [],
-        comments: generateComments(user_Id),
-        worklog: generateWorkLog(user_Id),
-        created: Date.now(),
-        updated: Date.now(),
-    }
-}
 
 const seedTickets = (dbUsers) => {
     const tickets = [];
