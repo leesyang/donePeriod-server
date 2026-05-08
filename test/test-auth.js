@@ -185,7 +185,7 @@ describe('SETS EP', function () {
           expect(res).to.have.status(422);
           expect(res.body).to.be.a('object');
           expect(res.body).to.include.keys('code', 'reason', 'message', 'location')
-          return User.find({ username: newUserInfo.username }).count()
+          return User.countDocuments({ username: newUserInfo.username })
         })
         .then(count => {
           expect(count).to.equal(0);

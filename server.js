@@ -3,13 +3,6 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-//const favicon = require('serve-favicon');
-mongoose.Promise = global.Promise;
-
-// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true`
-// by default, you need to set it to false.
-mongoose.set('useFindAndModify', false);
-mongoose.set('useCreateIndex', true)
 
 const passport = require('passport');
 
@@ -53,45 +46,32 @@ app.use('/', router);
 // ----- server -----
 let server;
 
-function runServer(databaseUrl, port = PORT) {
-  return new Promise((resolve, reject) => {
-    mongoose.connect(databaseUrl,
-      { 
-        useNewUrlParser: true,
-        useCreateIndex: true,
-        useUnifiedTopology: true 
-      }, err => {
-      if (err) {
-        return reject(err);
-      }
-      server = app.listen(port, () => {
-        console.log(`Your app is listening on port ${port}`);
-        resolve();
-      })
-        .on('error', err => {
-          mongoose.disconnect();
-          reject(err);
-        });
+async function runServer(databaseUrl, port = PORT) {
+  await mongoose.connect(databaseUrl);
+  await new Promise((resolve, reject) => {
+    server = app.listen(port, () => {
+      console.log(`Your app is listening on port ${port}`);
+      resolve();
+    }).on('error', err => {
+      mongoose.disconnect();
+      reject(err);
     });
   });
-};
+}
 
-function closeServer() {
-  return mongoose.disconnect().then(() => {
-    return new Promise((resolve, reject) => {
-      console.log('Closing server');
-      server.close(err => {
-        if (err) {
-          return reject(err);
-        }
-        resolve();
-      });
+async function closeServer() {
+  await mongoose.disconnect();
+  await new Promise((resolve, reject) => {
+    console.log('Closing server');
+    server.close(err => {
+      if (err) return reject(err);
+      resolve();
     });
   });
-};
+}
 
 if (require.main === module) {
   runServer(DATABASE_URL).catch(err => console.error(err));
-};
+}
 
 module.exports = { app, runServer, closeServer };
