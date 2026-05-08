@@ -191,7 +191,7 @@ describe('ticket endpoints', function() {
         });
 
         describe('POST a new ticket', function() {
-            it.only('should post a new ticket', function() {
+            it('should post a new ticket', function() {
                 const newTicket = { 
                     type: 'Incident',
                     priority: 'Urgent',

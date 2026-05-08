@@ -18,7 +18,7 @@ const userSchema = new Schema({
     email: { type: String, required: true, unique: true },
     profilePicture: { type: String, default: 'user-images/default-profile-img.svg' },
     watching: [ { type: ObjectId, ref: 'Ticket' } ],
-    notes: [ { type: userNotes, default: userNotes } ],
+    notes: [ userNotes ],
     assigned: [ { type: ObjectId, ref: 'Ticket' }]
 });
 
